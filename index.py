@@ -108,24 +108,13 @@ app.layout = html.Div([
                         options=dropdown_options,
                     ),
 
-                    html.Div(id='output_area_extra_dropdowns'),
-                    dcc.RadioItems(
-                        options=[
-                            {'label': 'Add', 'value': 'add'},
-                            {'label': 'Subtract', 'value': 'sub'},
-                            {'label': 'Multiply', 'value': 'multiply'}
-                        ],
-                        value='add',
-                        id='matrix_radio'
-                    ),
                     html.Button(type='submit', children='ok', id='submit_matrix')
                 ]),
                 # Output goes here
                 html.Div([
                     # Matrix one
                     html.Div([], id='output_area_matrix_1'),
-                    # Matrix two
-                    html.Div([], id='output_area_matrix_2')
+
                 ])
             ])
         ]),
@@ -157,41 +146,37 @@ def birth_day_problem(click, value):
     return str(math_work.same_birthday_probability(value))
 
 
-@app.callback(Output('output_area_extra_dropdowns', 'children'),
-              [Input('matrix_radio', 'value')])
-def make_extra_dropdowns(value):
-    if value is None:
-        return
-    elif value == 'multiply':
-        return html.Div([
-            html.P('Matrix 2 size'),
-            html.Label('Number of rows'),
-            dcc.Dropdown(
-                id='row_dropdown2',
-                options=dropdown_options,
-            ),
-            html.Label('Number of columns'),
-            dcc.Dropdown(
-                id='column_dropdown2',
-                options=dropdown_options,
-            ),
-        ])
-
-
 @app.callback(Output('output_area_matrix_1', 'children'),
               [Input('submit_matrix', 'n_clicks')],
               [State('row_dropdown', 'value'),
-               State('column_dropdown', 'value'),
-               State('matrix_radio', 'value')])
-def generate_matrix(click, row_number, column_number, radio_value):
+               State('column_dropdown', 'value'), ])
+def generate_matrix(click, row_number, column_number):
     # To prevent an error when callbacks are called on page load.
-    if row_number is None or column_number is None or radio_value is None:
+    if row_number is None or column_number is None:
         return
-    table = new_table(row_number, column_number, radio_value)
-    return table
+    return new_table(row_number, column_number)
 
 
-def new_table(row_number, column_number, radio_value):
+def generate_states(row_number, column_number):
+    state_list = []
+    for t in range(1, 3):
+        for r in range(row_number):
+            for c in range(column_number):
+                state_list.append(State('t' + str(t) + '_r' + str(r) + '_c' + str(c), 'value'))
+    return state_list
+
+
+@app.callback(Output('matrix_answer_output_area', 'children'),
+              [Input('submit_matrix_math', 'n_clicks')],
+              [State('t{}_r{}_c{}'.format(t, r, c), 'value') for t in range(1, 3) for r in range(1,3) for c in range(1,3)])
+def answer_matrix(click, *kwargs):
+    print('Answering matrix')
+    if click is None:
+        return
+    return 'Overloaded it'
+
+
+def new_table(row_number, column_number):
     print('generating table')
     # Generates a table, representing a matrix, with row_number rows and column number columns
 
@@ -202,23 +187,28 @@ def new_table(row_number, column_number, radio_value):
                 html.P('Matrix 1'),
                 html.Table(
                     generate_table(row_number, column_number, 1),
+                    id='table1'
                 ),
-            ], style={'display': 'inline', 'float': 'left', 'border': border3}),
+            ]),
             html.Div([
                 html.P('Matrix 2'),
-                html.Table(generate_table(row_number, column_number, 2))
-            ], id='other_matrix_div', style={'display': 'inline', 'float': 'left'})
-        ], style={'border': border1}),
-        html.Br(),
-        html.Br(),
-        html.Br(),
-        html.Br(),
-        html.Br(),
+                html.Table(generate_table(row_number, column_number, 2), id='table2')
+            ], id='other_matrix_div')
+        ]),
+        html.Div(id='matrix_answer_output_area', children='Answer here'),
         html.Br(),
         html.Div([
+            dcc.RadioItems(
+                options=[
+                    {'label': 'Add', 'value': 'add'},
+                    {'label': 'Subtract', 'value': 'sub'},
+                ],
+                value='add',
+                id='matrix_radio'
+            ),
+            html.Button(id='submit_matrix_math', type='submit', children='Compute Matrix'),
 
-            html.Button(id='submit_matrix', type='submit', children='Compute Matrix'),
-        ], style={'float': 'left', 'border': border1})
+        ])
 
     ])
 
@@ -235,7 +225,6 @@ def generate_table(row_number, column_number, table_id):
             id = 't' + str(table_id) + '_r' + str(row_id) + '_c' + str(col_id)
             row.append(html.Td(dcc.Input(type='text', id=id)))
         tr_list.append(html.Tr(row))
-    pprint.pprint(tr_list)
     return tr_list
 
 

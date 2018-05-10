@@ -1,4 +1,6 @@
 import math
+import pprint
+from dash.dependencies import Input, Output, State
 
 def binomial(number_of_successes, total_tests, prob_of_success):
     """
@@ -25,7 +27,14 @@ def same_birthday_probability(n):
     return "%.2f" % ((1 - (364 / 365) ** (n - 1)) * 100)
 
 
-if __name__ == '__main__':
-    print(binomial(7, 10, 3 / 6))
-    print(same_birthday_probability(23))
+def generate_states(row_number, column_number):
+    state_list = []
+    for t in range(1, 3):
+        for r in range(row_number):
+            for c in range(column_number):
+                state_list.append(State('t{}_r{}_c{}'.format(t, r, c), 'value'))
+    return state_list
 
+
+if __name__ == '__main__':
+    print('Main')
