@@ -4,17 +4,58 @@ from dash.dependencies import Input, Output, State
 from app import app
 import pprint
 import math_work
+import itertools
+import numpy as np
 
 border1 = ''
 border2 = ''
 border3 = ''
 
+answer_options = {
+    '1': {
+        '1': 'answer_matrix_output_div_1x1',
+        '2': 'answer_matrix_output_div_1x2',
+        '3': 'answer_matrix_output_div_1x3',
+        '4': 'answer_matrix_output_div_1x4',
+        '5': 'answer_matrix_output_div_1x5'
+    },
+    '2': {
+        '1': 'answer_matrix_output_div_2x1',
+        '2': 'answer_matrix_output_div_2x2',
+        '3': 'answer_matrix_output_div_2x3',
+        '4': 'answer_matrix_output_div_2x4',
+        '5': 'answer_matrix_output_div_2x5'
+    },
+    '3': {
+        '1': 'answer_matrix_output_div_3x1',
+        '2': 'answer_matrix_output_div_3x2',
+        '3': 'answer_matrix_output_div_3x3',
+        '4': 'answer_matrix_output_div_3x4',
+        '5': 'answer_matrix_output_div_3x5'
+    },
+    '4': {
+        '1': 'answer_matrix_output_div_4x1',
+        '2': 'answer_matrix_output_div_4x2',
+        '3': 'answer_matrix_output_div_4x3',
+        '4': 'answer_matrix_output_div_4x4',
+        '5': 'answer_matrix_output_div_4x5'
+    },
+    '5': {
+        '1': 'answer_matrix_output_div_5x1',
+        '2': 'answer_matrix_output_div_5x2',
+        '3': 'answer_matrix_output_div_5x3',
+        '4': 'answer_matrix_output_div_5x4',
+        '5': 'answer_matrix_output_div_5x5'
+    }
+}
+
 dropdown_options = []
-for x in range(1, 11):
+for x in range(1, 6):
     dict = {'label': x, 'value': x}
     dropdown_options.append(dict)
 
 app.layout = html.Div([
+    html.Div(style={'display': 'none'}, id='hidden_div_1'),
     # Header div
     html.Div([
         # header
@@ -93,35 +134,102 @@ app.layout = html.Div([
         html.Div([
             html.Details([
                 html.Summary('Matrix'),
-                # Input goes here
+
                 html.Div([
-                    # Row dropdown
-
-                    html.Label('Number of rows'),
+                    html.Label('Row: '),
                     dcc.Dropdown(
-                        id='row_dropdown',
                         options=dropdown_options,
+                        id='row_dropdown'
                     ),
-                    html.Label('Number of columns'),
+                    html.Label('Column: '),
                     dcc.Dropdown(
-                        id='column_dropdown',
                         options=dropdown_options,
+                        id='column_dropdown'
                     ),
+                    html.Button(id='generate_matrix_submit_button', children='Ok'),
+                    html.Div(id='generate_matrix_output_div')
 
-                    html.Button(type='submit', children='ok', id='submit_matrix')
                 ]),
-                # Output goes here
-                html.Div([
-                    # Matrix one
-                    html.Div([], id='output_area_matrix_1'),
-
-                ])
             ])
         ]),
 
     ])
 
 ])
+
+
+def generate_table(row_number, column_number, table_id):
+    tr_list = []
+    row_id = 0
+    for r in range(row_number):
+        row = []
+        row_id += 1
+        col_id = 0
+        for c in range(column_number):
+            col_id += 1
+            id = 't' + str(table_id) + '_r' + str(row_id) + '_c' + str(col_id)
+            row.append(html.Td(dcc.Input(type='number', id=id, placeholder=id)))
+        tr_list.append(html.Tr(row))
+    return tr_list
+
+
+def generate_table_from_data(row_number, column_number, data):
+    tr_list = []
+    row_id = 0
+    for r in range(row_number):
+        row = []
+        for c in range(column_number):
+            row.append(html.Td(dcc.Input(type='number', value=data[r][c])))
+        tr_list.append(html.Tr(row))
+    return tr_list
+
+
+def new_table(row_number, column_number):
+    print('generating table')
+    output_id = answer_options.get(str(row_number)).get(str(column_number))
+    return html.Div([
+        html.Div([
+            html.Div([
+                html.P('Matrix 1'),
+                html.Table(generate_table(row_number, column_number, 1),
+                           id='table1')
+            ]),
+            html.Div([
+                html.P('Matrix 2'),
+                html.Table(generate_table(row_number, column_number, 2),
+                           id='table2')
+            ])
+        ]),
+        html.Div(id=output_id, children='Answer here'),
+        html.Br(),
+        html.Div([
+            dcc.RadioItems(
+                options=[
+                    {'label': 'Add', 'value': 'add'},
+                    {'label': 'Subtract', 'value': 'sub'},
+                ],
+                value='add',
+                id='answer_matrix_radio'
+            ),
+            html.Button(id='answer_matrix_submit_button', type='submit', children='Compute Matrix'),
+
+        ])
+
+    ])
+
+
+@app.callback(Output('generate_matrix_output_div', 'children'),
+              [Input('generate_matrix_submit_button', 'n_clicks')],
+              [State('row_dropdown', 'value'),
+               State('column_dropdown', 'value')])
+def generate_matrix(click, row_number, column_number):
+    if click is None:
+        print('Dummy call...')
+        return
+
+    return html.Div([
+        new_table(row_number, column_number)
+    ])
 
 
 @app.callback(Output('output_area_binomial', 'children'),
@@ -146,87 +254,64 @@ def birth_day_problem(click, value):
     return str(math_work.same_birthday_probability(value))
 
 
-@app.callback(Output('output_area_matrix_1', 'children'),
-              [Input('submit_matrix', 'n_clicks')],
-              [State('row_dropdown', 'value'),
-               State('column_dropdown', 'value'), ])
-def generate_matrix(click, row_number, column_number):
-    # To prevent an error when callbacks are called on page load.
-    if row_number is None or column_number is None:
-        return
-    return new_table(row_number, column_number)
+def pull_out_matrixes(column, start, end, *args):
+    col_count = 0
+    row_count = 0
+    matrix = []
+    row_list = []
+    for keys in args[start:end]:
+
+        col_count += 1
+        if col_count <= column:
+            row_list.append(keys)
+        if col_count == column:
+            col_count = 0
+            row_count += 1
+            matrix.append(row_list)
+            row_list = []
+    return matrix
 
 
-def generate_states(row_number, column_number):
-    state_list = []
-    for t in range(1, 3):
-        for r in range(row_number):
-            for c in range(column_number):
-                state_list.append(State('t' + str(t) + '_r' + str(r) + '_c' + str(c), 'value'))
-    return state_list
+# Answer the matrix in here
+def generate_output_callback(row, column):
+    def output_callback(click, *args):
+        # This function can display different outputs depending on
+        # the values of the dynamic controls
+        if click is None:
+            return
+        matrix1 = pull_out_matrixes(column, 0, int(len(args) / 2), *args)
+        matrix2 = pull_out_matrixes(column, int(len(args) / 2), int(len(args)), *args)
 
+        if args[int(len(args) - 1)] == 'add':
+            result = np.array(matrix1) + np.array(matrix2)
+        else:
+            result = np.array(matrix1) - np.array(matrix2)
 
-@app.callback(Output('matrix_answer_output_area', 'children'),
-              [Input('submit_matrix_math', 'n_clicks')],
-              [State('t{}_r{}_c{}'.format(t, r, c), 'value') for t in range(1, 3) for r in range(1,3) for c in range(1,3)])
-def answer_matrix(click, *kwargs):
-    print('Answering matrix')
-    if click is None:
-        return
-    return 'Overloaded it'
-
-
-def new_table(row_number, column_number):
-    print('generating table')
-    # Generates a table, representing a matrix, with row_number rows and column number columns
-
-    return html.Div([
-        # Div containing table and output div for another
-        html.Div([
-            html.Div([
-                html.P('Matrix 1'),
-                html.Table(
-                    generate_table(row_number, column_number, 1),
-                    id='table1'
-                ),
-            ]),
-            html.Div([
-                html.P('Matrix 2'),
-                html.Table(generate_table(row_number, column_number, 2), id='table2')
-            ], id='other_matrix_div')
-        ]),
-        html.Div(id='matrix_answer_output_area', children='Answer here'),
-        html.Br(),
-        html.Div([
-            dcc.RadioItems(
-                options=[
-                    {'label': 'Add', 'value': 'add'},
-                    {'label': 'Subtract', 'value': 'sub'},
-                ],
-                value='add',
-                id='matrix_radio'
-            ),
-            html.Button(id='submit_matrix_math', type='submit', children='Compute Matrix'),
-
+        return html.Div([
+            html.Hr(),
+            "Answer:",
+            html.Table(
+                generate_table_from_data(row, column, result)
+            )
         ])
 
-    ])
+    return output_callback
 
 
-def generate_table(row_number, column_number, table_id):
-    tr_list = []
-    row_id = 0
-    for r in range(row_number):
-        row = []
-        row_id += 1
-        col_id = 0
-        for c in range(column_number):
-            col_id += 1
-            id = 't' + str(table_id) + '_r' + str(row_id) + '_c' + str(col_id)
-            row.append(html.Td(dcc.Input(type='text', id=id)))
-        tr_list.append(html.Tr(row))
-    return tr_list
-
+for value1, value2 in itertools.product(
+        # For each dropdown (One defining # of rows, the other defining # of columns
+        [o['value'] for o in app.layout['row_dropdown'].options],
+        [o['value'] for o in app.layout['column_dropdown'].options]):
+    app.callback(
+        # Get the output from dictionary depending on what the current row and column number is
+        Output(answer_options.get(str(value1)).get(str(value2)), 'children'),
+        # Input will always be the same - a button
+        [Input('answer_matrix_submit_button', 'n_clicks')],
+        # Have to generate states representing the dcc.Inputs based on what the current row/col count is. +1 because it's a list
+        [State('t{}_r{}_c{}'.format(t, r, c), 'value') for t in range(1, 3) for r in
+         range(1, value1 + 1) for c in range(1, value2 + 1)] + [State('answer_matrix_radio', 'value')])(
+        generate_output_callback(value1, value2)
+    )
 
 if __name__ == '__main__':
     app.run_server(debug=True)
