@@ -2,6 +2,7 @@ import math
 import pprint
 
 
+
 def binomial(number_of_successes, total_tests, prob_of_success):
     """
     In the theory of probability and statistics, a Bernoulli trial (or binomial trial) is a random experiment with exactly
@@ -27,6 +28,15 @@ def same_birthday_probability(n):
     return "%.2f" % ((1 - (364 / 365) ** (n - 1)) * 100)
 
 
+def send_query_to_wolfram(query, client_connection):
+    res = client_connection.query(query)
+    answer = next(res.results).text
+    return answer
+
+
 if __name__ == '__main__':
-    print('Main')
-    [print('t{}_r{}_c{}'.format(t, r, c), 'value') for t in range(1, 3) for r in range(1, 4) for c in range(1, 4)]
+   print('Main')
+
+# To integrate do integrate "equation"
+# To differentiate do differentiate "equation"
+# To solve an algebra equation do solve "equation"
