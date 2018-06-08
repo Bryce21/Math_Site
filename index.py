@@ -3,7 +3,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from app import app
-from apps import matrix_page, calculus_page
+from apps import matrix_page, calculus_page, probability_page
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -15,16 +15,18 @@ app.layout = html.Div([
         html.Div([
             html.P(
                 'This site is designed to aggregate all kinds of useful tools and information for the math student to one place.')
-        ]),
+       ]),
+
         html.Div([
             # TODO Have external css target this class and add margin-left
-            dcc.Link('Linear Algebra', href='/Linear_algebra', className="header_links"),
-            dcc.Link('Calculus', href="/calculus", className="header_links"),
-            dcc.Link('Probability', href="/probability", className="header_links"),
-        ]),
+            dcc.Link('Home', href="/", id="first_header_link",),
+            dcc.Link('Linear Algebra', href='/Linear_algebra', className="header_links", style={"margin-left":"5%"}),
+            dcc.Link('Calculus', href="/calculus", className="header_links", style={"margin-left": "5%"}),
+            dcc.Link('Probability', href="/probability", className="header_links", style={"margin-left": "5%"}),
+        ], style={"margin-bottom":"-20px"}),
         html.Hr(),
 
-    ], id="header_div"),
+    ], id="header_div", style={"text-align":"center"}),
     # Body div
     html.Div(id='page_content'),
 
@@ -42,6 +44,8 @@ def display_page(pathname):
         return layout
     elif pathname == "/calculus":
         return calculus_page.layout
+    elif pathname == "/probability":
+        return probability_page.layout
     else:
         return "404"
 

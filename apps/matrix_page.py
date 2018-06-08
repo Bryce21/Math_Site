@@ -6,6 +6,7 @@ import pprint
 import math_work
 import itertools
 import numpy as np
+from numpy.linalg import inv
 
 border1 = ''
 border2 = ''
@@ -58,64 +59,6 @@ layout = html.Div([
     html.Div(style={'display': 'none'}, id='hidden_div_1'),
     # Header div
 
-
-    # Div containing everything to do with Binomial equations
-    # html.Div([
-    #     # Info on binomial equations div
-    #     html.Div([
-    #         html.P(['A ', html.A(['binomial distribution'], href='https://en.wikipedia.org/wiki/Binomial_distribution'),
-    #                 ' is a probability problem that addresses the likely hood of getting m successes of n yes or no trials. Some example use cases: Coin flips. Dice roll']),
-    #     ], style={'border': border2}),
-    #     # Div that will contain the dropdown component
-    #     html.Div([
-    #         html.Details([
-    #             html.Summary('Binomial Distribition'),
-    #             html.Div([
-    #                 html.P([
-    #                     dcc.Input(id='number_of_successes_field', type='number',
-    #                               placeholder='Successes'),
-    #                     html.Br(),
-    #                     dcc.Input(id='number_of_tests_field', type='number', placeholder='Number of Tests'),
-    #                     html.Br(),
-    #                     dcc.Input(id='success_rate_field', type='number', placeholder='Rate of Success'),
-    #                     html.Br(),
-    #                     html.Button(id='submit_binomial', type='submit', children='ok'),
-    #                     html.Div([], id='output_area_binomial')
-    #                 ])
-    #             ], style={'border': border2}),
-    #         ]),
-    #
-    #     ])
-    # ], style={'border': border1}, className='centered', id='binomial_div'),
-    # html.Br(),
-    # Everything to do with birthday problem
-    # html.Div([
-    #     # Info on binomial equations div
-    #     html.Div([
-    #         html.P(['The ', html.A(['birthday problem'], href='https://en.wikipedia.org/wiki/Birthday_problem'),
-    #                 ' is a probability problem...']),
-    #     ], style={'border': border2}),
-    #     # Div that will contain the dropdown component
-    #     html.Div([
-    #         html.Details([
-    #             html.Summary('Birthday Problem'),
-    #             html.Div([
-    #                 html.Div([
-    #                     html.P([
-    #                         dcc.Input(id='number_of_people_field', type='number', placeholder='Number of people',
-    #                                   value=''),
-    #                         html.Br(),
-    #                         html.Button(id='submit_birthday', type='submit', children='ok'),
-    #                         html.Div(id='output_area_birthday')
-    #                     ])
-    #                 ], style={'border': border2}),
-    #
-    #             ]),
-    #
-    #         ], id='birthday_details')
-    #     ])
-    # ], style={'border': border1}, id='bday_div', className='centered', ),
-    # html.Br(),
     # Div containing everything matrix
     html.Div([
         # Details on matrix goes here
@@ -124,24 +67,32 @@ layout = html.Div([
         ]),
 
         html.Div([
-                html.Div([
-                    html.Label('Row: '),
-                    dcc.Dropdown(
-                        options=dropdown_options,
-                        id='row_dropdown',
+            html.Div([
+                html.Label('Row: '),
+                dcc.Dropdown(
+                    options=dropdown_options,
+                    id='row_dropdown',
 
-                    ),
-                    html.Label('Column: '),
-                    dcc.Dropdown(
-                        options=dropdown_options,
-                        id='column_dropdown',
+                ),
+                html.Label('Column: '),
+                dcc.Dropdown(
+                    options=dropdown_options,
+                    id='column_dropdown',
 
-                    ),
+                ),
+                # When dealing with matrices of different sizes will need something like this
+                # dcc.RadioItems(
+                #     options=[
+                #         {'label': 'Two matrices of same size', 'value': 'two_matrices'},
+                #     ],
+                #     value='two_matrices',
+                #     id="two_matrices_checklist"
+                # ),
 
-                    html.Button(id='generate_matrix_submit_button', children='Ok'),
-                    html.Div(id='generate_matrix_output_div')
+                html.Button(id='generate_matrix_submit_button', children='Ok'),
+                html.Div(id='generate_matrix_output_div')
 
-                ]),
+            ]),
 
         ]),
 
@@ -167,7 +118,6 @@ def generate_table(row_number, column_number, table_id):
 
 def generate_table_from_data(row_number, column_number, data):
     tr_list = []
-    row_id = 0
     for r in range(row_number):
         row = []
         for c in range(column_number):
@@ -177,7 +127,6 @@ def generate_table_from_data(row_number, column_number, data):
 
 
 def new_table(row_number, column_number):
-    print('generating table')
     output_id = answer_options.get(str(row_number)).get(str(column_number))
     return html.Div([
         html.Div([
@@ -202,10 +151,12 @@ def new_table(row_number, column_number):
                     {'label': 'Add', 'value': 'add'},
                     {'label': 'Subtract', 'value': 'sub'},
                     {'label': 'Multiply', 'value': 'mul'},
+                    {'label': 'Invert Matrix One', 'value': 'inv'}
                 ],
                 value='add',
                 id='answer_matrix_radio'
             ),
+
             html.Button(id='answer_matrix_submit_button', type='submit', children='Compute Matrix'),
 
         ])
@@ -223,28 +174,6 @@ def generate_matrix(click, row_number, column_number):
     return html.Div([
         new_table(row_number, column_number)
     ])
-
-
-@app.callback(Output('output_area_binomial', 'children'),
-              [Input('submit_binomial', 'n_clicks')],
-              [State('number_of_successes_field', 'value'),
-               State('number_of_tests_field', 'value'),
-               State('success_rate_field', 'value')])
-def binomial_submittion(click, success, total, rate_of_success):
-    # To prevent an error when callbacks are called on page load.
-    if success is None or total is None or rate_of_success is None:
-        return
-    ans = math_work.binomial(success, total, rate_of_success)
-    return str(ans)
-
-
-@app.callback(Output('output_area_birthday', 'children'),
-              [Input('submit_birthday', 'n_clicks')],
-              [State('number_of_people_field', 'value'), ])
-def birth_day_problem(click, value):
-    if click is None or value is None:
-        return
-    return str(math_work.same_birthday_probability(value))
 
 
 def pull_out_matrixes(column, start, end, *args):
@@ -277,18 +206,33 @@ def generate_output_callback(row, column):
         what_to_do = args[int(len(args) - 1)]
 
         if what_to_do == 'sub':
-            result = matrix1 - matrix2
+            what_to_display = html.Table(
+                generate_table_from_data(row, column, (matrix1 - matrix2))
+            )
         elif what_to_do == 'mul':
-            result = np.dot(matrix1, matrix2)
+            what_to_display = html.Table(
+                generate_table_from_data(row, column, (np.dot(matrix1, matrix2)))
+            )
+        elif what_to_do == 'inv':
+            # requires a square matrix so need to have same size row and column
+            if row == column:
+                try:
+                    what_to_display = html.Table(
+                        generate_table_from_data(row, column, inv(matrix1))
+                    )
+                except:
+                    what_to_display = "Matrix is not invertable."
+            else:
+                what_to_display = "Matrix has to be square in order to be inverted!"
         else:
-            result = matrix1+matrix2
+            what_to_display = html.Table(
+                generate_table_from_data(row, column, (matrix1 + matrix2))
+            )
 
         return html.Div([
             html.Hr(),
-            "Answer:",
-            html.Table(
-                generate_table_from_data(row, column, result)
-            )
+            "Answer: ",
+            what_to_display
         ])
 
     return output_callback
@@ -308,4 +252,3 @@ for value1, value2 in itertools.product(
          range(1, value1 + 1) for c in range(1, value2 + 1)] + [State('answer_matrix_radio', 'value')])(
         generate_output_callback(value1, value2)
     )
-

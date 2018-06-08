@@ -4,21 +4,33 @@ from dash.dependencies import Input, Output, State
 from app import app
 import math_work
 import wolframalpha
+import config
 
-app_id = 'JUAGWK-3T22GG4V94'
+app_id = config.keys.get('wolfram_api_key')
 client = wolframalpha.Client(app_id)
 
 layout = html.Div([
-    html.H3("How to use this page:"),
-    html.P(
-        "The entry field below will submit whatever math problem is entered to wolfram alpha in an API call. "
-        "It's very easy, but some special rules have to be followed in order for Wolfram to be able to make sense of the input."),
-    html.P("Following are some examples of how to properly use the API in order to solve your math problem."),
-    html.Hr(),
-    html.P("For example, to use differentiation, type in 'differentiate 'your math problem here''."),
-    html.P("In that same vein, to solve an algebra problem you'd replace 'differentiate' with 'solve'."),
-    html.P("You're probably able to guess that integration would be: 'integrate 'your math problem''."),
-    html.Hr(),
+
+    html.H3("Calculus"),
+    html.Div([
+        html.P("Calculus is the study of...")
+    ]),
+    html.Details([
+        html.Summary("How to use this page:"),
+        html.P(
+            "The entry field below will submit whatever math problem is entered to wolfram alpha in an API call. "
+            "It's very easy, but some special rules have to be followed in order for Wolfram to be able to make sense of the input."),
+        html.P("Following are some examples of how to properly use the API in order to solve your math problem."),
+        html.Hr(),
+        html.P("For example, to use differentiation, type in 'differentiate 'your math problem here''."),
+        html.P("In that same vein, to solve an algebra problem you'd replace 'differentiate' with 'solve'."),
+        html.P("You're probably able to guess that integration would be: 'integrate 'your math problem''."),
+        html.Hr(),
+    ]),
+
+
+    html.H3("Common Calculus problems: "),
+
     dcc.Input(
         type="text",
         id="wolfram_api_input",

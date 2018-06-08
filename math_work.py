@@ -1,6 +1,4 @@
 import math
-import pprint
-
 
 
 def binomial(number_of_successes, total_tests, prob_of_success):
